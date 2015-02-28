@@ -64,6 +64,26 @@ Router.map ->
     onBeforeAction: ->
       Session.set('entryError', undefined)
       @next()
+    onRun: ->
+      if AccountsEntry.settings.forgotPasswordTemplate
+        @template = AccountsEntry.settings.forgotPasswordTemplate
+
+        # If the user has a custom template, and not using the helper, then
+        # maintain the package Javascript so that OpenGraph tags and share
+        # buttons still work.
+        pkgRendered= Template.forgotPassword.rendered
+        userRendered = Template[@template].rendered
+
+        if userRendered
+          Template[@template].rendered = ->
+            pkgRendered.call(@)
+            userRendered.call(@)
+        else
+          Template[@template].rendered = pkgRendered
+
+        Template[@template].events(AccountsEntry.forgotPasswordEvents)
+        Template[@template].helpers(AccountsEntry.forgotPasswordHelpers)
+      @next()
 
   @route 'entrySignOut',
     path: '/sign-out'
